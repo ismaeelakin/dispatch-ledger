@@ -8,10 +8,10 @@
     -apple-system,
     sans-serif;
   color: #202b32;
-  background: #e6ebee;
+  background: #eff1f2;
   font-synthesis: none;
-  --line: #e6ebee;
-  --muted: #202b32;
+  --line: #c7cfd3;
+  --muted: #555b60;
   --accent: #234860;
   --ink: #202b32;
 }
@@ -750,16 +750,6 @@ dialog pre {
   .card-head {
     padding: 15px;
   }
-}
-
-:root {
-  color: #202b32;
-  background: #eff1f2;
-  --line: #c7cfd3;
-  --muted: #555b60;
-  --green: #234860;
-  --accent: #234860;
-  --ink: #202b32;
 }
 
 button,
