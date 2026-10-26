@@ -8,15 +8,15 @@ TypeScript · Node.js · SQL · Browser JavaScript
 
 ![Dispatch Ledger operations console](docs/console.png)
 
-## Architecture
-
-![Architecture](docs/architecture.svg)
-
 ## The problem
 
 A producer submits an event, a receiver goes offline, and a retry arrives after the original request already succeeded. Now the system needs to answer four questions: **what was accepted, who may access it, what was actually attempted, and what is safe to replay?**
 
 Dispatch Ledger makes those boundaries visible. Event acceptance and delivery creation commit together. Every request is scoped to a tenant. Attempts carry a signature and a stable delivery ID. Dead-letter replay requires a reason and retains the original attempt history.
+
+## Tech stack
+
+TypeScript, Node.js 22.16+, node:sqlite, SQL and browser JavaScript. No third-party runtime dependencies.
 
 ## Run the complete demo
 
@@ -41,6 +41,10 @@ Open **http://127.0.0.1:8080**. The demo starts the API, a bounded delivery work
 | Pause an endpoint          | Future claims stop. In-flight requests are not recalled.                                                           |
 
 The demo credentials are intentionally public, work only in the demo's temporary database, and are not production credentials.
+
+## Architecture
+
+![Architecture](docs/architecture.svg)
 
 ## Guarantees and boundaries
 
