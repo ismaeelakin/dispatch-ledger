@@ -1,0 +1,25 @@
+{
+  "name": "dispatch-ledger",
+  "version": "0.1.0",
+  "description": "Tenant-isolated webhook delivery with transactional fanout, signed attempts and an operations console",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.16.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.web.json",
+    "check": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.web.json --noEmit",
+    "test": "npm run build && node --test dist/test/*.test.js",
+    "demo": "npm run build && node dist/src/demo.js",
+    "start": "node dist/src/main.js",
+    "provision": "node dist/src/provision.js",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "prettier": "3.6.2",
+    "typescript": "5.9.3"
+  }
+}

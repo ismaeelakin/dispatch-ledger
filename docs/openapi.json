@@ -1,0 +1,247 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Dispatch Ledger",
+    "version": "0.1.0",
+    "description": "Single-host tenant-scoped webhook delivery API. Times are Unix milliseconds; delivery is at least once."
+  },
+  "servers": [{ "url": "http://127.0.0.1:8080" }],
+  "security": [{ "tenantBearer": [] }],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "health",
+        "security": [],
+        "responses": { "200": { "description": "Process is available" } }
+      }
+    },
+    "/api/config": {
+      "get": {
+        "operationId": "publicConfiguration",
+        "security": [],
+        "responses": {
+          "200": { "description": "Demo flag and configured target IDs; no URLs or credentials" }
+        }
+      }
+    },
+    "/api/overview": {
+      "get": {
+        "operationId": "tenantOverview",
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["pending", "in_flight", "succeeded", "dead"] }
+          },
+          { "name": "cursor", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tenant identity, all-state counts, latest 25 delivery records, cursor, endpoints and audit entries"
+          },
+          "default": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/events": {
+      "post": {
+        "operationId": "publishEvent",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string", "minLength": 1, "maxLength": 128 }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["type", "data"],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "maxLength": 80,
+                    "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
+                  },
+                  "data": {}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Event and matching delivery records committed",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AcceptedEvent" } }
+            }
+          },
+          "200": {
+            "description": "Identical idempotency replay returns the original event",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AcceptedEvent" } }
+            }
+          },
+          "default": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/endpoints": {
+      "post": {
+        "operationId": "createEndpoint",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["name", "targetId", "subscription"],
+                "properties": {
+                  "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+                  "targetId": {
+                    "type": "string",
+                    "description": "An operator-configured target ID, never a URL"
+                  },
+                  "subscription": {
+                    "type": "string",
+                    "maxLength": 80,
+                    "description": "* or an exact event type"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Endpoint created; the secret is returned only in this response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["id", "signingSecret"],
+                  "properties": {
+                    "id": { "type": "string", "format": "uuid" },
+                    "signingSecret": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "default": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/endpoints/{id}/state": {
+      "post": {
+        "operationId": "setEndpointState",
+        "parameters": [{ "$ref": "#/components/parameters/ResourceId" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["active"],
+                "properties": { "active": { "type": "boolean" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Future claims enabled or paused" },
+          "default": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/deliveries/{id}/attempts": {
+      "get": {
+        "operationId": "deliveryAttempts",
+        "parameters": [{ "$ref": "#/components/parameters/ResourceId" }],
+        "responses": {
+          "200": {
+            "description": "Lifetime sequence, HTTP status/error category, duration and time for each recorded attempt"
+          },
+          "default": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/deliveries/{id}/replay": {
+      "post": {
+        "operationId": "replayDeadDelivery",
+        "parameters": [{ "$ref": "#/components/parameters/ResourceId" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["reason"],
+                "properties": { "reason": { "type": "string", "minLength": 1, "maxLength": 200 } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dead delivery returned to pending; old attempt history retained"
+          },
+          "default": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "tenantBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "High-entropy tenant token printed once by provisioning"
+      }
+    },
+    "parameters": {
+      "ResourceId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      }
+    },
+    "schemas": {
+      "AcceptedEvent": {
+        "type": "object",
+        "required": ["id", "created", "deliveries"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "created": { "type": "boolean" },
+          "deliveries": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": ["code", "message"],
+            "properties": { "code": { "type": "string" }, "message": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "responses": {
+      "Error": {
+        "description": "400 validation, 401 authorization, 403 Host/Origin, 404 foreign/missing resource, 409 idempotency/state conflict, 413 size, 415 media type, 429 rate limit, or 503 temporary service failure",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      }
+    }
+  }
+}

@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Dispatch Ledger · Delivery operations</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <a class="brand" href="/"
+          ><span class="mark">D<span>↗</span></span
+          ><span>Dispatch<span>Ledger</span></span></a
+        >
+        <p class="nav-label">OPERATIONS</p>
+        <nav>
+          <a class="selected" href="#overview"><span>◫</span>Delivery ledger</a
+          ><a href="#endpoints"><span>⌁</span>Endpoints</a
+          ><a href="#audit"><span>≡</span>Audit trail</a>
+        </nav>
+        <div class="side-bottom">
+          <span class="side-dot"></span>Single-host service
+          <p>Atomic fanout.<br />Signed delivery.<br />Accountable recovery.</p>
+          <a href="https://github.com/ismaeelakin/dispatch-ledger" target="_blank" rel="noreferrer"
+            >Source &amp; design notes ↗</a
+          >
+        </div>
+      </aside>
+      <main id="overview">
+        <header>
+          <div class="breadcrumb">
+            Workspace <span>/</span> <strong id="workspace-name">Connect a tenant</strong>
+          </div>
+          <label id="workspace-control" hidden
+            ><span class="sr-only">Demo workspace</span
+            ><select id="workspace">
+              <option value="acme">Acme Commerce</option>
+              <option value="northstar">Northstar Labs</option>
+            </select></label
+          >
+          <form id="connect">
+            <label for="api-token" class="sr-only">Tenant API token</label
+            ><input
+              id="api-token"
+              type="password"
+              placeholder="Tenant API token"
+              autocomplete="off"
+              required
+            /><button type="submit">Connect</button>
+          </form>
+        </header>
+        <div id="demo-note" class="demo-note" hidden>
+          <span>INTERACTIVE DEMO</span> Synthetic events. Real HTTP attempts to local receivers.
+          Switch workspaces to inspect tenant isolation.
+        </div>
+        <section class="heading">
+          <div>
+            <p class="eyebrow">WEBHOOK DELIVERY INFRASTRUCTURE</p>
+            <h1>Every event. Accounted for.</h1>
+            <p>Follow the attempt. Understand the failure. Recover with a record.</p>
+          </div>
+          <button id="refresh" class="secondary">↻ Refresh ledger</button>
+        </section>
+        <p class="notice" id="notice" role="status" aria-live="polite">
+          API tokens stay in memory for this page session.
+        </p>
+        <section class="metrics" aria-label="Delivery counts">
+          <article>
+            <div><span class="metric-dot delivered"></span>Delivered</div>
+            <strong id="count-succeeded">—</strong><small>Receiver returned 2xx</small>
+          </article>
+          <article>
+            <div><span class="metric-dot queued"></span>Pending</div>
+            <strong id="count-pending">—</strong><small>Ready or scheduled for retry</small>
+          </article>
+          <article>
+            <div><span class="metric-dot active"></span>In flight</div>
+            <strong id="count-in_flight">—</strong><small>Held by an active worker lease</small>
+          </article>
+          <article>
+            <div><span class="metric-dot failed"></span>Dead letter</div>
+            <strong id="count-dead">—</strong><small>Review before replaying</small>
+          </article>
+        </section>
+        <div class="main-grid">
+          <section class="card ledger">
+            <div class="card-head">
+              <div>
+                <h2>Delivery ledger</h2>
+                <p id="updated">No snapshot loaded</p>
+              </div>
+              <label
+                ><span class="sr-only">Filter by delivery state</span
+                ><select id="filter">
+                  <option value="">All states</option>
+                  <option value="pending">Pending</option>
+                  <option value="in_flight">In flight</option>
+                  <option value="succeeded">Succeeded</option>
+                  <option value="dead">Dead letter</option>
+                </select></label
+              >
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Event / delivery</th>
+                    <th>Endpoint</th>
+                    <th>State</th>
+                    <th>Budget</th>
+                    <th>Last result</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="delivery-rows"></tbody>
+              </table>
+              <p id="empty" class="empty" hidden>No deliveries in this view.</p>
+            </div>
+            <div class="pagination">
+              <span id="row-count">0 deliveries</span>
+              <div>
+                <button id="first" class="quiet" disabled>Newest</button
+                ><button id="next" class="quiet" disabled>Older →</button>
+              </div>
+            </div>
+            <p class="ledger-foot">
+              Select an event to inspect its attempt history. Delivery is at least once; receivers
+              must deduplicate.
+            </p>
+          </section>
+          <section class="card composer">
+            <div class="card-head">
+              <div>
+                <p class="eyebrow">PRODUCER API</p>
+                <h2>Publish an event</h2>
+              </div>
+              <span class="code-tag">POST</span>
+            </div>
+            <form id="publish">
+              <label for="event-type">Event type</label
+              ><input id="event-type" value="order.created" required maxlength="80" />
+              <div class="label-row">
+                <label for="idempotency">Idempotency key</label
+                ><button id="new-key" type="button" class="text-button">New key ↗</button>
+              </div>
+              <input id="idempotency" required maxlength="128" /><label for="payload"
+                >Event data <span>JSON</span></label
+              ><textarea id="payload" spellcheck="false" required>
+{
+  "order_id": "ORD-1048",
+  "total_minor": 12900,
+  "currency": "USD"
+}</textarea
+              >
+              <p class="hint">
+                Event acceptance and delivery fanout commit together. Reusing a key returns the
+                original event.
+              </p>
+              <button id="publish-button" type="submit">Publish event <span>↗</span></button>
+            </form>
+          </section>
+        </div>
+        <div class="bottom-grid">
+          <section id="endpoints" class="card">
+            <div class="card-head">
+              <div>
+                <h2>Subscribed endpoints</h2>
+                <p>Operator-configured targets only</p>
+              </div>
+              <button class="quiet" id="add-endpoint">+ Add endpoint</button>
+            </div>
+            <div id="endpoint-list"></div>
+            <p class="ledger-foot">
+              Pause stops future claims. An already-sent request cannot be recalled.
+            </p>
+          </section>
+          <section id="audit" class="card">
+            <div class="card-head">
+              <div>
+                <h2>Audit trail</h2>
+                <p>Tenant-scoped changes and delivery outcomes</p>
+              </div>
+              <span class="code-tag">LATEST 15</span>
+            </div>
+            <ol id="audit-list"></ol>
+          </section>
+        </div>
+        <footer>
+          <span>Dispatch Ledger / v0.1.0</span
+          ><span>Token-scoped tenants · AES-GCM secrets · HMAC-SHA256 attempts</span>
+        </footer>
+      </main>
+    </div>
+    <dialog id="detail">
+      <div class="dialog-head">
+        <h2 id="detail-title">Attempt history</h2>
+        <button id="detail-close" class="quiet" aria-label="Close details">×</button>
+      </div>
+      <pre id="detail-content"></pre>
+    </dialog>
+    <dialog id="replay">
+      <div class="dialog-head">
+        <h2>Replay delivery</h2>
+        <button id="replay-close" class="quiet" aria-label="Close replay">×</button>
+      </div>
+      <p>
+        Replay resets the retry budget and retains every previous attempt. Record what changed
+        before trying again.
+      </p>
+      <form id="replay-form">
+        <input type="hidden" id="replay-id" /><label for="reason">Replay reason</label
+        ><input
+          id="reason"
+          maxlength="200"
+          required
+          placeholder="Receiver configuration corrected"
+        /><button id="replay-submit" type="submit">Schedule replay</button>
+      </form>
+    </dialog>
+    <dialog id="endpoint-dialog">
+      <div class="dialog-head">
+        <h2>Add endpoint</h2>
+        <button id="endpoint-dialog-close" class="quiet" aria-label="Close endpoint form">×</button>
+      </div>
+      <form id="endpoint-form">
+        <label for="endpoint-name">Endpoint name</label
+        ><input id="endpoint-name" maxlength="80" required /><label for="target"
+          >Configured target</label
+        ><select id="target"></select
+        ><label for="subscription">Subscription</label
+        ><input id="subscription" value="*" required maxlength="80" />
+        <p class="hint">
+          Use * for all event types, or a name such as order.created. URLs are configured by the
+          operator, not accepted from tenant requests.
+        </p>
+        <button id="endpoint-submit" type="submit">Create endpoint</button>
+      </form>
+    </dialog>
+  </body>
+</html>
