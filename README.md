@@ -1,12 +1,16 @@
 # Dispatch Ledger
 
-**Webhook delivery you can account for.** A tenant-isolated event delivery service with transactional fanout, signed HTTP attempts, bounded retries, and an operations console.
+A tenant-isolated event delivery service with transactional fanout, signed HTTP attempts, bounded retries, and an operations console.
 
 TypeScript · Node.js · SQL · Browser JavaScript
 
 [![Correctness](https://github.com/ismaeelakin/dispatch-ledger/actions/workflows/ci.yml/badge.svg)](https://github.com/ismaeelakin/dispatch-ledger/actions/workflows/ci.yml)
 
 ![Dispatch Ledger operations console](docs/console.png)
+
+## Architecture
+
+![Architecture](docs/architecture.svg)
 
 ## The problem
 
@@ -93,4 +97,4 @@ CI runs the same checks on Linux and Windows with Node 22 and 24. There are no A
 | Worker concurrency and shutdown        | [Worker](src/worker.ts) · [Integration tests](test/worker.test.ts)       |
 | Recovery tradeoffs and scaling path    | [Architecture](docs/ARCHITECTURE.md) · [Operations](docs/OPERATIONS.md)  |
 
-The interesting work is in the contracts and failure handling. The console is a way to inspect those contracts—not a substitute for them.
+The interesting work is in the contracts and failure handling. The console is a way to inspect those contracts. It runs against the same API as other clients.
