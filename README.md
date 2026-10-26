@@ -6,7 +6,7 @@ TypeScript · Node.js · SQL · Browser JavaScript
 
 [![Correctness](https://github.com/ismaeelakin/dispatch-ledger/actions/workflows/ci.yml/badge.svg)](https://github.com/ismaeelakin/dispatch-ledger/actions/workflows/ci.yml)
 
-![Dispatch Ledger operations console](docs/console-current.png)
+![Dispatch Ledger operations console](docs/console-identity.png)
 
 ## The problem
 
@@ -44,7 +44,7 @@ The demo credentials are intentionally public, work only in the demo's temporary
 
 ## Architecture
 
-![Architecture](docs/architecture.svg)
+![Architecture](docs/architecture-project.svg)
 
 ## Guarantees and boundaries
 

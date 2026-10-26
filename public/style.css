@@ -824,3 +824,10 @@ button:not(.secondary):not(.quiet):not(.text-button):not(.event-link) {
 .failed {
   background: #853b2a;
 }
+
+h1 {
+  font-family: 'Arial Narrow', 'Franklin Gothic Medium', Arial, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
