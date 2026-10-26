@@ -6,7 +6,7 @@ TypeScript · Node.js · SQL · Browser JavaScript
 
 [![Correctness](https://github.com/ismaeelakin/dispatch-ledger/actions/workflows/ci.yml/badge.svg)](https://github.com/ismaeelakin/dispatch-ledger/actions/workflows/ci.yml)
 
-![Dispatch Ledger operations console](docs/console.png)
+![Dispatch Ledger operations console](docs/console-current.png)
 
 ## The problem
 
